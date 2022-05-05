@@ -1,0 +1,705 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Frien_dd
+
+
+//@version=4
+study("MTF Key Levels - Support and Resistance", shorttitle="MTF Levels - S/R", overlay=true)
+
+// Daily Lines
+showdOpen = input(true, title=". O", group="Daily Levels", inline = "1")
+showdHigh = input(true, title=". H", group="Daily Levels", inline = "1")
+showdLow = input(true, title=". L", group="Daily Levels", inline = "1")
+
+showpdOpen = input(true, title=". pO", group="Daily Levels", inline = "1")
+showpdHigh = input(true, title=". pH", group="Daily Levels", inline = "1")
+showpdLow = input(true, title=". pL", group="Daily Levels", inline = "1")
+showpdEQ = input(true, title=". pEQ", group="Daily Levels", inline = "1", tooltip="p = previous, O = Open, H = High, L = Low, EQ = Equilibrium (50%)")
+
+
+// Weekly Lines
+showwOpen = input(true, title=". O", group="Weekly Levels", inline = "1")
+showwHigh = input(true, title=". H", group="Weekly Levels", inline = "1")
+showwLow = input(true, title=". L", group="Weekly Levels", inline = "1")
+
+showpwOpen = input(true, title=". pO", group="Weekly Levels", inline = "1")
+showpwHigh = input(true, title=". pH", group="Weekly Levels", inline = "1")
+showpwLow = input(true, title=". pL", group="Weekly Levels", inline = "1")
+showpwEQ = input(true, title=". pEQ", group="Weekly Levels", inline = "1", tooltip="p = previous, O = Open, H = High, L = Low, EQ = Equilibrium (50%)")
+
+
+// Monthly Lines
+showmOpen = input(true, title="- O", group="Monthly Levels", inline = "1")
+showmHigh = input(true, title="- H", group="Monthly Levels", inline = "1")
+showmLow = input(true, title="- L", group="Monthly Levels", inline = "1")
+
+showpmOpen = input(true, title=". pO", group="Monthly Levels", inline = "1")
+showpmHigh = input(true, title=". pH", group="Monthly Levels", inline = "1")
+showpmLow = input(true, title=". pL", group="Monthly Levels", inline = "1", tooltip="p = previous, O = Open, H = High, L = Low")
+
+
+// Yealy Lines
+showyOpen = input(true, title=". O", group="Yearly Levels", inline = "1")
+showyHigh = input(true, title=". H", group="Yearly Levels", inline = "1")
+showyLow = input(true, title=". L", group="Yearly Levels", inline = "1", tooltip="O = Open, H = High, L = Low")
+
+
+// VWAPS
+show_DVWAPs = input(true, title = "Daily", group = "Standard VWAPS - Daily, Weekly, Monthly", type = input.bool, inline = "VWAP1")
+show_WVWAPs = input(true, title = "Weekly", group = "Standard VWAPS - Daily, Weekly, Monthly", type = input.bool, inline = "VWAP1")
+show_MVWAPs = input(true, title = "Monthly", group = "Standard VWAPS - Daily, Weekly, Monthly", type = input.bool, inline = "VWAP1")
+show_YVWAPs = input(true, title = "Yearly", group = "Standard VWAPS - Daily, Weekly, Monthly", type = input.bool, inline = "VWAP1", tooltip="M-VWAP and Y-VWAP only shows on higher time frames")
+
+
+var DSpaces =  "                                             "
+var DPSpaces = "                                                                         "
+var DNoSpaces =  " "
+var DPNoSpaces = "                                      "
+
+
+var WSpaces =  "                                                                                                        "
+var WPSpaces = "                                                                                                                                        "
+var WNoSpaces =  " "
+var WPNoSpaces = "                                      "
+
+
+var MSpaces =  "                                                                                                                                                                           "
+var MPSpaces = "                                                                                                                                                                                                      "
+var MNoSpaces =  " "
+var MPNoSpaces = "                                      "
+
+
+var YSpaces =  "                                                                                                                                                                                                                                       "
+var YPSpaces = "                                                                                                                                                                                                                                                                 "
+var YNoSpaces =  " "
+var YPNoSpaces = "                                      "
+
+x1= valuewhen(barstate.islast, bar_index, 0)
+
+D_extend_length = input(25, title="Extend Daily short line", group="Line Options", inline = "1")
+D_x2 = x1 + D_extend_length
+
+W_extend_length = input(35, title="Extend Weekly short line", group="Line Options", inline = "1")
+W_x2 = x1 + W_extend_length
+
+M_extend_length = input(45, title="Extend Monthly short line", group="Line Options", inline = "1")
+M_x2 = x1 + M_extend_length
+
+Y_extend_length = input(55, title="Extend Yearly short line", group="Line Options", inline = "1")
+Y_x2 = x1 + Y_extend_length
+
+
+//Round of Line Value
+f_round_up_to_tick(x, mintick)=>
+    mult = 1 / mintick
+    value = ceil(x*mult)/mult
+
+// Line Options
+extend = extend.none
+exnone = input(true, title="Short Line", group="Line Options", inline = "2")
+exboth = input(false, title="Line Across Screen", group="Line Options", inline = "3")
+exright = input(false, title="Line To Right", group="Line Options", inline = "3")
+showPrice = input(false, title="Show Level Prices", group="Line Options", inline = "4")
+showVPrice = input(false, title="Show VWAP Prices", group="Line Options", inline = "4")
+
+extend := exnone ? extend.none : exboth ? extend.both : exright ? extend.right : extend
+
+D_x2loc = D_x2
+D_x2loc := exnone ? D_x2 : exboth ? bar_index : exright ? bar_index : D_x2loc
+
+W_x2loc = W_x2
+W_x2loc := exnone ? W_x2 : exboth ? bar_index : exright ? bar_index : W_x2loc
+
+M_x2loc = M_x2
+M_x2loc := exnone ? M_x2 : exboth ? bar_index : exright ? bar_index : M_x2loc
+
+
+Y_x2loc = Y_x2
+Y_x2loc := exnone ? Y_x2 : exboth ? bar_index : exright ? bar_index : Y_x2loc
+
+
+DailySpaces = DNoSpaces 
+DailySpaces := exnone ? DNoSpaces : exboth ? DSpaces : exright ? DSpaces : DailySpaces
+DailyPSpaces = DPNoSpaces 
+DailyPSpaces := exnone ? DPNoSpaces : exboth ? DPSpaces : exright ? DPSpaces : DailyPSpaces
+
+WeeklySpaces = WNoSpaces 
+WeeklySpaces := exnone ? WNoSpaces : exboth ? WSpaces : exright ? WSpaces : WeeklySpaces
+WeeklyPSpaces = WPNoSpaces 
+WeeklyPSpaces := exnone ? WPNoSpaces : exboth ? WPSpaces : exright ? WPSpaces : WeeklyPSpaces
+
+MonthlySpaces = MNoSpaces 
+MonthlySpaces := exnone ? MNoSpaces : exboth ? MSpaces : exright ? MSpaces : MonthlySpaces
+MonthlyPSpaces = MPNoSpaces 
+MonthlyPSpaces := exnone ? MPNoSpaces : exboth ? MPSpaces : exright ? MPSpaces : MonthlyPSpaces
+
+YearlySpaces = YNoSpaces 
+YearlySpaces := exnone ? YNoSpaces : exboth ? YSpaces : exright ? YSpaces : YearlySpaces
+YearlyPSpaces = YPNoSpaces 
+YearlyPSpaces := exnone ? YPNoSpaces : exboth ? YPSpaces : exright ? YPSpaces : YearlyPSpaces
+
+//Line Colors
+DailyInputColor = input(color.blue, title="Daily", group = "User Selectable Line Colors", inline = "Input 0") 
+WeeklyInputColor = input(color.yellow, title="Weekly", group = "User Selectable Line Colors", inline = "Input 0") 
+MonthlyInputColor = input(color.purple, title="Monthly", group = "User Selectable Line Colors", inline = "Input 1") 
+YearlyInputColor = input(color.red, title="Yearly", group = "User Selectable Line Colors", inline = "Input 1") 
+
+show_DVWAPs_color = show_DVWAPs ? DailyInputColor : na
+show_WVWAPs_color = show_WVWAPs ? WeeklyInputColor : na
+show_MVWAPs_color = show_MVWAPs ? MonthlyInputColor : na
+show_YVWAPs_color = show_YVWAPs ? YearlyInputColor : na
+
+
+//////////////////////////////////////
+/////Previous Day Values//////////////
+//////////////////////////////////////
+
+
+// Previous Day Open
+// showpdOpen = input(true, title="- pdOpen", group="pd Values", inline = "Daily")
+pdOpen = security(syminfo.tickerid, "D", open[1], lookahead=true)
+var line pdOpenLine = na
+var label pdOpenLabel = na
+if showpdOpen
+    pdOpenLine := line.new(x1=x1, y1=pdOpen, x2=D_x2, y2=pdOpen, xloc=xloc.bar_index, width=1, color=DailyInputColor, style=line.style_dashed, extend=extend)    
+    pdOpenLabel := label.new(D_x2loc, pdOpen, text = DailySpaces+"pdOpen", color=DailyInputColor, textcolor=DailyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(pdOpenLine[1])    
+    label.delete(pdOpenLabel[1])    
+
+
+
+var label pdOpenLabelPrice = na
+if showpdOpen and showPrice
+    pdOpenLabelPrice := label.new(D_x2loc, pdOpen, text = DailyPSpaces+tostring(f_round_up_to_tick(pdOpen, syminfo.mintick)), color=DailyInputColor, textcolor=DailyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(pdOpenLabelPrice[1])    
+
+i_text1     = ("₿ - Scripts by Frien_dd - ₿")
+
+
+// Previous Day High
+// showpdHigh = input(true, title="- pdHigh", group="pd Values", inline = "Daily")
+pdHigh = security(syminfo.tickerid, "D", high[1], lookahead=true)
+var line pdHighLine = na
+var label pdHighLabel = na
+if showpdHigh 
+    pdHighLine := line.new(x1=x1, y1=pdHigh, x2=D_x2, y2=pdHigh, xloc=xloc.bar_index, width=1, color=DailyInputColor, style=line.style_dashed, extend=extend)    
+    pdHighLabel := label.new(D_x2loc, pdHigh, text = DailySpaces+"pdHigh", color=DailyInputColor, textcolor=DailyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(pdHighLine[1])    
+    label.delete(pdHighLabel[1])    
+
+var label pdHighLabelPrice = na
+if showpdHigh and showPrice
+    pdHighLabelPrice := label.new(D_x2loc, pdHigh, text = DailyPSpaces+tostring(f_round_up_to_tick(pdHigh, syminfo.mintick)), color=DailyInputColor, textcolor=DailyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(pdHighLabelPrice[1])    
+
+
+// Previous Day Low
+// showpdLow = input(true, title="- pdLow", group="pd Values", inline = "Daily")
+pdLow = security(syminfo.tickerid, "D", low[1], lookahead=true)
+var line pdLowLine = na
+var label pdLowLabel = na
+if showpdLow 
+    pdLowLine := line.new(x1=x1, y1=pdLow, x2=D_x2, y2=pdLow, xloc=xloc.bar_index, width=1, color=DailyInputColor, style=line.style_dashed, extend=extend)    
+    pdLowLabel := label.new(D_x2loc, pdLow, text = DailySpaces+"pdLow", color=DailyInputColor, textcolor=DailyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(pdLowLine[1])    
+    label.delete(pdLowLabel[1])   
+
+var label pdLowLabelPrice = na
+if showpdLow and showPrice
+    pdLowLabelPrice := label.new(D_x2loc, pdLow, text = DailyPSpaces+tostring(f_round_up_to_tick(pdLow, syminfo.mintick)), color=DailyInputColor, textcolor=DailyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(pdLowLabelPrice[1])    
+
+
+// Previous Day EQ
+// showpdEQ = input(true, title="- pdEQ", group="pd Values", inline = "Daily")
+pdEQ = (pdHigh + pdLow) / 2
+var line pdEQLine = na
+var label pdEQLabel = na
+if showpdEQ 
+    pdEQLine := line.new(x1=x1, y1=pdEQ, x2=D_x2, y2=pdEQ, xloc=xloc.bar_index, width=1, color=DailyInputColor, style=line.style_dashed, extend=extend)    
+    pdEQLabel := label.new(D_x2loc, pdEQ, text = DailySpaces+"pdEQ", color=DailyInputColor, textcolor=DailyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(pdEQLine[1])    
+    label.delete(pdEQLabel[1])   
+
+var label pdEQLabelPrice = na
+if showpdEQ and showPrice
+    pdEQLabelPrice := label.new(D_x2loc, pdEQ, text = DailyPSpaces+tostring(f_round_up_to_tick(pdEQ, syminfo.mintick)), color=DailyInputColor, textcolor=DailyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(pdEQLabelPrice[1])    
+
+
+//////////////////////////////////////
+/////Previous Week Values//////////////
+//////////////////////////////////////
+
+// Previous Week Open
+// showpwOpen = input(true, title="- pwOpen", group="pw Values", inline = "Weekly")
+pwOpen = security(syminfo.tickerid, "W", open[1], lookahead = barmerge.lookahead_on)
+var line pwOpenLine = na
+var label pwOpenLabel = na
+if showpwOpen
+    pwOpenLine := line.new(x1=x1, y1=pwOpen, x2=W_x2, y2=pwOpen, xloc=xloc.bar_index, width=1, color=WeeklyInputColor, style=line.style_dashed, extend=extend)    
+    pwOpenLabel := label.new(W_x2loc, pwOpen, text = WeeklySpaces+"pwOpen", color=WeeklyInputColor, textcolor=WeeklyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(pwOpenLine[1])
+    label.delete(pwOpenLabel[1])
+
+var label pwOpenLabelPrice = na
+if showpwOpen and showPrice
+    pwOpenLabelPrice := label.new(W_x2loc, pwOpen, text = WeeklyPSpaces+tostring(f_round_up_to_tick(pwOpen, syminfo.mintick)), color=WeeklyInputColor, textcolor=WeeklyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(pwOpenLabelPrice[1])    
+
+
+// Previous Week High
+// showpwHigh = input(true, title="- pwHigh", group="pw Values", inline = "Weekly")
+pwHigh = security(syminfo.tickerid, "W", high[1], lookahead=true)
+var line pwHighLine = na
+var label pwHighLabel = na
+if showpwHigh
+    pwHighLine := line.new(x1=x1, y1=pwHigh, x2=W_x2, y2=pwHigh, xloc=xloc.bar_index, width=1, color=WeeklyInputColor, style=line.style_dashed, extend=extend)    
+    pwHighLabel := label.new(W_x2loc, pwHigh, text = WeeklySpaces+"pwHigh", color=WeeklyInputColor, textcolor=WeeklyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(pwHighLine[1])
+    label.delete(pwHighLabel[1])
+
+var label pwHighLabelPrice = na
+if showpwHigh and showPrice
+    pwHighLabelPrice := label.new(W_x2loc, pwHigh, text = WeeklyPSpaces+tostring(f_round_up_to_tick(pwHigh, syminfo.mintick)), color=WeeklyInputColor, textcolor=WeeklyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(pwHighLabelPrice[1])    
+
+
+// Previous Week Low
+// showpwLow = input(true, title="- pwLow", group="pw Values", inline = "Weekly")
+pwLow = security(syminfo.tickerid, "W", low[1], lookahead=true)
+var line pwLowLine = na
+var label pwLowLabel = na
+if showpwLow
+    pwLowLine := line.new(x1=x1, y1=pwLow, x2=W_x2, y2=pwLow, xloc=xloc.bar_index, width=1, color=WeeklyInputColor, style=line.style_dashed, extend=extend)    
+    pwLowLabel := label.new(W_x2loc, pwLow, text = WeeklySpaces+"pwLow", color=WeeklyInputColor, textcolor=WeeklyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(pwLowLine[1])
+    label.delete(pwLowLabel[1])
+
+var label pwLowLabelPrice = na
+if showpwLow and showPrice
+    pwLowLabelPrice := label.new(W_x2loc, pwLow, text = WeeklyPSpaces+tostring(f_round_up_to_tick(pwLow, syminfo.mintick)), color=WeeklyInputColor, textcolor=WeeklyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(pwLowLabelPrice[1])    
+
+
+// Previous Week EQ
+// showpwEQ = input(true, title="- pwEQ", group="pw Values", inline = "Weekly")
+pwEQ = (pwHigh + pwLow) / 2
+var line pwEQLine = na
+var label pwEQLabel = na
+if showpwEQ 
+    pwEQLine := line.new(x1=x1, y1=pwEQ, x2=W_x2, y2=pwEQ, xloc=xloc.bar_index, width=1, color=WeeklyInputColor, style=line.style_dashed, extend=extend)    
+    pwEQLabel := label.new(W_x2loc, pwEQ, text = WeeklySpaces+"pwEQ", color=WeeklyInputColor, textcolor=WeeklyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(pwEQLine[1])    
+    label.delete(pwEQLabel[1])   
+
+var label pwEQLabelPrice = na
+if showpwEQ and showPrice
+    pwEQLabelPrice := label.new(W_x2loc, pwEQ, text = WeeklyPSpaces+tostring(f_round_up_to_tick(pwEQ, syminfo.mintick)), color=WeeklyInputColor, textcolor=WeeklyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(pwEQLabelPrice[1])    
+
+
+///////////////////////////////////////
+/////Weekly Open-High-Low/////////////
+//////////////////////////////////////
+
+// Current Monthly Open
+// showwOpen = input(true, title=". wOpen", group="Weekly Levels", inline = "1")
+wOpen = security(syminfo.tickerid, "W", open, lookahead = barmerge.lookahead_on)
+var line wOpenLine = na
+var label wOpenLabel = na
+if showwOpen 
+    wOpenLine := line.new(x1=x1, y1=wOpen, x2=W_x2, y2=wOpen, xloc=xloc.bar_index, width=1, color=WeeklyInputColor, style=line.style_dashed, extend=extend)    
+    wOpenLabel := label.new(W_x2loc, wOpen, text = WeeklySpaces+"wOpen", color=WeeklyInputColor, textcolor=WeeklyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(wOpenLine[1])    
+    label.delete(wOpenLabel[1])    
+
+var label wOpenLabelPrice = na
+if showwOpen and showPrice
+    wOpenLabelPrice := label.new(W_x2loc, wOpen, text = WeeklyPSpaces+tostring(f_round_up_to_tick(wOpen, syminfo.mintick)), color=WeeklyInputColor, textcolor=WeeklyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(wOpenLabelPrice[1])    
+
+
+// Weekly Low High Levels
+var LastWeek = 0
+var WeeklyHigh = 0.0
+var WeeklyLow = 0.0
+
+ThisWeek = time('W')
+CheckWeek = ThisWeek!=LastWeek
+LastWeek := ThisWeek
+WeeklyHigh := CheckWeek or high>WeeklyHigh ? high[0] : WeeklyHigh
+WeeklyLow := CheckWeek or low<WeeklyLow ? low[0] : WeeklyLow
+
+
+var line wLowLine = na
+var label wLowLabel = na
+// showwLow = input(true, title=". wLow", group="Weekly Levels", inline = "1")
+if showwLow
+    wLowLine := line.new(x1=x1, y1=WeeklyLow, x2=W_x2, y2=WeeklyLow, xloc=xloc.bar_index, width=1, color=WeeklyInputColor, style=line.style_solid, extend=extend)    
+    wLowLabel := label.new(W_x2loc, WeeklyLow, text = MonthlySpaces+"wLow", color=WeeklyInputColor, textcolor=WeeklyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(wLowLine[1])    
+    label.delete(wLowLabel[1])    
+
+var label wLowLabelPrice = na
+if showwLow and showPrice
+    wLowLabelPrice := label.new(W_x2loc, WeeklyLow, text = WeeklyPSpaces+tostring(f_round_up_to_tick(WeeklyLow, syminfo.mintick)), color=WeeklyInputColor, textcolor=WeeklyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(wLowLabelPrice[1])    
+
+
+var line wHighLine = na
+var label wHighLabel = na
+// showwHigh = input(true, title=". wHigh", group="Weekly Levels", inline = "1")
+if showwHigh
+    wHighLine := line.new(x1=x1, y1=WeeklyHigh, x2=W_x2, y2=WeeklyHigh, xloc=xloc.bar_index, width=1, color=WeeklyInputColor, style=line.style_solid, extend=extend)    
+    wHighLabel := label.new(W_x2loc, WeeklyHigh, text = WeeklySpaces+"wHigh", color=WeeklyInputColor, textcolor=WeeklyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(wHighLine[1])    
+    label.delete(wHighLabel[1])    
+
+var label wHighLabelPrice = na
+if showwHigh and showPrice
+    wHighLabelPrice := label.new(W_x2loc, WeeklyHigh, text = WeeklyPSpaces+tostring(f_round_up_to_tick(WeeklyHigh, syminfo.mintick)), color=WeeklyInputColor, textcolor=WeeklyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(wHighLabelPrice[1])    
+
+
+//////////////////////////////////////
+/////Previous Month Values////////////
+//////////////////////////////////////
+
+// Previous Month Open
+// showpmOpen = input(true, title="- pmOpen", group="pm Values", inline = "Monthly")
+pmOpen = security(syminfo.tickerid, "M", open[1], lookahead = barmerge.lookahead_on)
+var line pmOpenLine = na
+var label pmOpenLabel = na
+if showpmOpen 
+    pmOpenLine := line.new(x1=x1, y1=pmOpen, x2=M_x2, y2=pmOpen, xloc=xloc.bar_index, width=1, color=MonthlyInputColor, style=line.style_dashed, extend=extend)    
+    pmOpenLabel := label.new(M_x2loc, pmOpen, text = MonthlySpaces+"pmOpen", color=MonthlyInputColor, textcolor=MonthlyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(pmOpenLine[1])    
+    label.delete(pmOpenLabel[1])    
+
+var label pmOpenLabelPrice = na
+if showpmOpen and showPrice
+    pmOpenLabelPrice := label.new(M_x2loc, pmOpen, text = MonthlyPSpaces+tostring(f_round_up_to_tick(pmOpen, syminfo.mintick)), color=MonthlyInputColor, textcolor=MonthlyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(pmOpenLabelPrice[1])    
+
+
+
+// Previous Month High
+// showpmHigh = input(true, title="- pmHigh", group="pm Values", inline = "Monthly")
+pmHigh = security(syminfo.tickerid, "M", high[1], lookahead=true)
+var line pmHighLine = na
+var label pmHighLabel = na
+if showpmHigh
+    pmHighLine := line.new(x1=x1, y1=pmHigh, x2=M_x2, y2=pmHigh, xloc=xloc.bar_index, width=1, color=MonthlyInputColor, style=line.style_dashed, extend=extend)    
+    pmHighLabel := label.new(M_x2loc, pmHigh, text = MonthlySpaces+"pmHigh", color=MonthlyInputColor, textcolor=MonthlyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(pmHighLine[1])
+    label.delete(pmHighLabel[1])
+
+var label pmHighLabelPrice = na
+if showpmHigh and showPrice
+    pmHighLabelPrice := label.new(M_x2loc, pmHigh, text = MonthlyPSpaces+tostring(f_round_up_to_tick(pmHigh, syminfo.mintick)), color=MonthlyInputColor, textcolor=MonthlyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(pmHighLabelPrice[1])    
+
+
+// Previous Month Low
+// showpmLow = input(true, title="- pmLow", group="pm Values", inline = "Monthly")
+pmLow = security(syminfo.tickerid, "M", low[1], lookahead=true)
+var line pmLowLine = na
+var label pmLowLabel = na
+if showpmLow
+    pmLowLine := line.new(x1=x1, y1=pmLow, x2=M_x2, y2=pmLow, xloc=xloc.bar_index, width=1, color=MonthlyInputColor, style=line.style_dashed, extend=extend)    
+    pmLowLabel := label.new(M_x2loc, pmLow, text = MonthlySpaces+"pmLow", color=MonthlyInputColor, textcolor=MonthlyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(pmLowLine[1])
+    label.delete(pmLowLabel[1])
+
+var label pmLowLabelPrice = na
+if showpmLow and showPrice
+    pmLowLabelPrice := label.new(M_x2loc, pmLow, text = MonthlyPSpaces+tostring(f_round_up_to_tick(pmLow, syminfo.mintick)), color=MonthlyInputColor, textcolor=MonthlyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(pmLowLabelPrice[1])    
+
+
+//////////////////////////////////////
+/////Daily Open///////////////////////
+//////////////////////////////////////
+// showdOpen = input(true, title="- dOpen", group="Current Daily", inline = "Daily")
+dOpen = security(syminfo.tickerid, "D", open, lookahead=true)
+var line dOpenLine = na
+var label dOpenLabel = na
+if showdOpen
+    dOpenLine := line.new(x1=x1, y1=dOpen, x2=D_x2, y2=dOpen, xloc=xloc.bar_index, width=1, color=DailyInputColor, style=line.style_dashed, extend=extend)    
+    dOpenLabel := label.new(D_x2loc, dOpen, text = DailySpaces+"dOpen", color=DailyInputColor, textcolor=DailyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(dOpenLine[1])    
+    label.delete(dOpenLabel[1])    
+
+var label dOpenLabelPrice = na
+if showdOpen and showPrice
+    dOpenLabelPrice := label.new(D_x2loc, dOpen, text = DailyPSpaces+tostring(f_round_up_to_tick(dOpen, syminfo.mintick)), color=DailyInputColor, textcolor=DailyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(dOpenLabelPrice[1])    
+
+// Daily Low High Levels
+var LastDay = 0
+var DailyHigh = 0.0
+var DailyLow = 0.0
+
+ThisDay = time('D')
+CheckDay = ThisDay!=LastDay
+LastDay := ThisDay
+DailyHigh := CheckDay or high>DailyHigh ? high[0] : DailyHigh
+DailyLow := CheckDay or low<DailyLow ? low[0] : DailyLow
+
+// Daily Low and High 
+var line dLowLine = na
+var label dLowLabel = na
+// showdLow = input(true, title=". dLow", group="Daily Levels", inline = "1")
+if showdLow
+    dLowLine := line.new(x1=x1, y1=DailyLow, x2=D_x2, y2=DailyLow, xloc=xloc.bar_index, width=1, color=DailyInputColor, style=line.style_solid, extend=extend)    
+    dLowLabel := label.new(D_x2loc, DailyLow, text = DailySpaces+"dLow", color=DailyInputColor, textcolor=DailyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(dLowLine[1])    
+    label.delete(dLowLabel[1])    
+
+var label dLowLabelPrice = na
+if showdLow and showPrice
+    dLowLabelPrice := label.new(D_x2loc, DailyLow, text = DailyPSpaces+tostring(f_round_up_to_tick(DailyLow, syminfo.mintick)), color=DailyInputColor, textcolor=DailyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(dLowLabelPrice[1])    
+
+
+var line dHighLine = na
+var label dHighLabel = na
+// showdHigh = input(true, title=". dHigh", group="Daily Levels", inline = "1")
+if showdHigh
+    dHighLine := line.new(x1=x1, y1=DailyHigh, x2=D_x2, y2=DailyHigh, xloc=xloc.bar_index, width=1, color=DailyInputColor, style=line.style_solid, extend=extend)    
+    dHighLabel := label.new(D_x2loc, DailyHigh, text = DailySpaces+"dHigh", color=DailyInputColor, textcolor=DailyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(dHighLine[1])    
+    label.delete(dHighLabel[1])    
+
+var label dHighLabelPrice = na
+if showdHigh and showPrice
+    dHighLabelPrice := label.new(D_x2loc, DailyHigh, text = DailyPSpaces+tostring(f_round_up_to_tick(DailyHigh, syminfo.mintick)), color=DailyInputColor, textcolor=DailyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(dHighLabelPrice[1])    
+
+///////////////////////////////////////
+/////Monthly Open-High-Low/////////////
+//////////////////////////////////////
+
+// Current Monthly Open
+// showmOpen = input(true, title="- mOpen", group="Current Monthly", inline = "Monthly")
+mOpen = security(syminfo.tickerid, "M", open, lookahead = barmerge.lookahead_on)
+var line mOpenLine = na
+var label mOpenLabel = na
+if showmOpen 
+    mOpenLine := line.new(x1=x1, y1=mOpen, x2=M_x2, y2=mOpen, xloc=xloc.bar_index, width=1, color=MonthlyInputColor, style=line.style_dashed, extend=extend)    
+    mOpenLabel := label.new(M_x2loc, mOpen, text = MonthlySpaces+"mOpen", color=MonthlyInputColor, textcolor=MonthlyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(mOpenLine[1])    
+    label.delete(mOpenLabel[1])    
+
+var label mOpenLabelPrice = na
+if showmOpen and showPrice
+    mOpenLabelPrice := label.new(M_x2loc, mOpen, text = MonthlyPSpaces+tostring(f_round_up_to_tick(mOpen, syminfo.mintick)), color=MonthlyInputColor, textcolor=MonthlyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(mOpenLabelPrice[1])    
+
+
+
+// Current Monthly High
+//Current Day High Low
+var LastMonth = 0
+var MonthlyHigh = 0.0
+var MonthlyLow = 0.0
+
+ThisMonth = time('M')
+CheckMonth = ThisMonth!=LastMonth
+LastMonth := ThisMonth
+MonthlyHigh := CheckMonth or high>MonthlyHigh ? high[0] : MonthlyHigh
+MonthlyLow := CheckMonth or low<MonthlyLow ? low[0] : MonthlyLow
+
+
+var line mLowLine = na
+var label mLowLabel = na
+// showmLow = input(true, title="- mLow", group="Current Monthly", inline = "Monthly")
+if showmLow
+    mLowLine := line.new(x1=x1, y1=MonthlyLow, x2=M_x2, y2=MonthlyLow, xloc=xloc.bar_index, width=1, color=MonthlyInputColor, style=line.style_solid, extend=extend)    
+    mLowLabel := label.new(M_x2loc, MonthlyLow, text = MonthlySpaces+"mLow", color=MonthlyInputColor, textcolor=MonthlyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(mLowLine[1])    
+    label.delete(mLowLabel[1])    
+
+var label mLowLabelPrice = na
+if showmLow and showPrice
+    mLowLabelPrice := label.new(M_x2loc, MonthlyLow, text = MonthlyPSpaces+tostring(f_round_up_to_tick(MonthlyLow, syminfo.mintick)), color=MonthlyInputColor, textcolor=MonthlyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(mLowLabelPrice[1])    
+
+
+var line mHighLine = na
+var label mHighLabel = na
+// showmHigh = input(true, title="- mHigh", group="Current Monthly", inline = "Monthly")
+if showmHigh
+    mHighLine := line.new(x1=x1, y1=MonthlyHigh, x2=M_x2, y2=MonthlyHigh, xloc=xloc.bar_index, width=1, color=MonthlyInputColor, style=line.style_solid, extend=extend)    
+    mHighLabel := label.new(M_x2loc, MonthlyHigh, text = MonthlySpaces+"mHigh", color=MonthlyInputColor, textcolor=MonthlyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(mHighLine[1])    
+    label.delete(mHighLabel[1])    
+
+var label mHighLabelPrice = na
+if showmHigh and showPrice
+    mHighLabelPrice := label.new(M_x2loc, MonthlyHigh, text = MonthlyPSpaces+tostring(f_round_up_to_tick(MonthlyHigh, syminfo.mintick)), color=MonthlyInputColor, textcolor=MonthlyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(mHighLabelPrice[1])    
+
+i_tableYpos = ("bottom")
+
+///////////////////////////////////////
+/////Yearly Open-High-Low/////////////
+//////////////////////////////////////
+
+// Current Yearly Open
+// showyOpen = input(true, title="- yOpen", group="Current Yearly", inline = "Yearly")
+yOpen = security(syminfo.tickerid, "12M", open, lookahead = barmerge.lookahead_on)
+var line yOpenLine = na
+var label yOpenLabel = na
+if showyOpen 
+    yOpenLine := line.new(x1=x1, y1=yOpen, x2=Y_x2, y2=yOpen, xloc=xloc.bar_index, width=1, color=YearlyInputColor, style=line.style_dashed, extend=extend)    
+    yOpenLabel := label.new(Y_x2loc, yOpen, text = YearlySpaces+"yOpen", color=YearlyInputColor, textcolor=YearlyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(yOpenLine[1])    
+    label.delete(yOpenLabel[1])    
+
+var label yOpenLabelPrice = na
+if showyOpen and showPrice
+    yOpenLabelPrice := label.new(Y_x2loc, yOpen, text = YearlyPSpaces+tostring(f_round_up_to_tick(yOpen, syminfo.mintick)), color=YearlyInputColor, textcolor=YearlyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(yOpenLabelPrice[1])    
+
+
+// Current Yearly High Low
+var LastYear = 0
+var YearlyHigh = 0.0
+var YearlyLow = 0.0
+
+ThisYear = time('12M')
+CheckYear = ThisYear!=LastYear
+LastYear := ThisYear
+YearlyHigh := CheckYear or high>YearlyHigh ? high[0] : YearlyHigh
+YearlyLow := CheckYear or low<YearlyLow ? low[0] : YearlyLow
+i_tableXpos = ("right")
+
+
+var line yLowLine = na
+var label yLowLabel = na
+if showyLow
+    yLowLine := line.new(x1=x1, y1=YearlyLow, x2=Y_x2, y2=YearlyLow, xloc=xloc.bar_index, width=1, color=YearlyInputColor, style=line.style_solid, extend=extend)    
+    yLowLabel := label.new(Y_x2loc, YearlyLow, text = YearlySpaces+"yLow", color=YearlyInputColor, textcolor=YearlyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(yLowLine[1])    
+    label.delete(yLowLabel[1])    
+
+var label yLowLabelPrice = na
+if showyLow and showPrice
+    yLowLabelPrice := label.new(Y_x2loc, YearlyLow, text = YearlyPSpaces+tostring(f_round_up_to_tick(YearlyLow, syminfo.mintick)), color=YearlyInputColor, textcolor=YearlyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(yLowLabelPrice[1])    
+
+var line yHighLine = na
+var label yHighLabel = na
+if showyHigh
+    yHighLine := line.new(x1=x1, y1=YearlyHigh, x2=Y_x2, y2=YearlyHigh, xloc=xloc.bar_index, width=1, color=YearlyInputColor, style=line.style_solid, extend=extend)    
+    yHighLabel := label.new(Y_x2loc, YearlyHigh, text = YearlySpaces+"yHigh", color=YearlyInputColor, textcolor=YearlyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    line.delete(yHighLine[1])    
+    label.delete(yHighLabel[1])    
+
+var label yHighLabelPrice = na
+if showyHigh and showPrice
+    yHighLabelPrice := label.new(Y_x2loc, YearlyHigh, text = YearlyPSpaces+tostring(f_round_up_to_tick(YearlyHigh, syminfo.mintick)), color=YearlyInputColor, textcolor=YearlyInputColor, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(yHighLabelPrice[1])    
+
+i_height    = (7)
+i_width     = (15)
+i_c_text    = (color.new(color.white, 50))
+
+//Daily VWAP
+is_today = year == year(timenow) and month == month(timenow) and dayofmonth == dayofmonth(timenow)
+roundedVWAP = f_round_up_to_tick(vwap, syminfo.mintick)
+VWAP = roundedVWAP
+plot(VWAP, "D-VWAP", is_today ? show_DVWAPs_color : na, offset = 0)
+
+var label VWAPLabel = na
+if VWAP
+    VWAPLabel := label.new(bar_index, VWAP, text = "                      D-VWAP", color=show_DVWAPs_color, textcolor=show_DVWAPs_color, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(VWAPLabel[1])    
+
+var label VWAPPLabel = na
+if VWAP and showVPrice
+    VWAPPLabel := label.new(bar_index, VWAP, text = "                                                        "+tostring(VWAP), color=show_DVWAPs_color, textcolor=show_DVWAPs_color, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(VWAPPLabel[1])    
+
+//Weeekly VWAP
+src = hlc3
+wt = time("W")
+
+wstart = na(wt[1]) or wt > wt[1]
+
+wsumSrc = src * volume
+wsumVol = volume
+wsumSrc := wstart ? wsumSrc : wsumSrc + wsumSrc[1]
+wsumVol := wstart ? wsumVol : wsumVol + wsumVol[1]
+
+WVWAP=(wsumSrc / wsumVol)
+wvw = f_round_up_to_tick(WVWAP, syminfo.mintick)
+
+plot(timeframe.isintraday ? wvw : na, title="W-VWAP", color=show_WVWAPs_color)
+
+var label wVWAPLabel = na
+if wvw
+    wVWAPLabel := label.new(bar_index, wvw, text = "                      W-VWAP", color=show_WVWAPs_color, textcolor=show_WVWAPs_color, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(wVWAPLabel[1])    
+
+var label wVWAPPLabel = na
+if wvw and showVPrice
+    wVWAPPLabel := label.new(bar_index, wvw, text = "                                                        "+tostring(wvw), color=show_WVWAPs_color, textcolor=show_WVWAPs_color, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(wVWAPPLabel[1])    
+
+i_textSize  = ("normal")
+i_c_bg      = (color.new(color.blue, 80))
+
+//Monthly VWAP
+var float   vwapsum     = na
+var float   volumesum   = na
+
+newSession = change(time('M'))
+vwapsum     := newSession ? hl2*volume          : hl2*volume            + vwapsum[1]
+volumesum   := newSession ? volume              : volume                + volumesum[1]
+
+MVWAP      = vwapsum/volumesum
+mvw = f_round_up_to_tick(MVWAP, syminfo.mintick)
+
+plot(newSession ? na : mvw               , title="M-VWAP",       color=show_MVWAPs_color, style=plot.style_linebr)
+
+var label mVWAPLabel = na
+if mvw
+    mVWAPLabel := label.new(bar_index, mvw, text = "                      M-VWAP", color=show_MVWAPs_color, textcolor=show_MVWAPs_color, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(mVWAPLabel[1])    
+
+var label mVWAPPLabel = na
+if mvw and showVPrice
+    mVWAPPLabel := label.new(bar_index, mvw, text = "                                                        "+tostring(mvw), color=show_MVWAPs_color, textcolor=show_MVWAPs_color, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(mVWAPPLabel[1])    
+
+var table watermark = table.new(i_tableYpos + "_" + i_tableXpos, 1, 1)
+
+//Yearly VWAP
+var float   yvwapsum     = na
+var float   yvolumesum   = na
+
+ynewSession = change(time('12M'))
+yvwapsum     := ynewSession ? hl2*volume          : hl2*volume            + yvwapsum[1]
+yvolumesum   := ynewSession ? volume              : volume                + yvolumesum[1]
+
+YVWAP      = yvwapsum/yvolumesum
+yvw = f_round_up_to_tick(YVWAP, syminfo.mintick)
+
+table.cell(watermark, 0, 0, i_text1, i_width, i_height, i_c_text, text_size = i_textSize, bgcolor = i_c_bg)
+
+plot(newSession ? na : yvw               , title="Y-VWAP",       color=show_YVWAPs_color, style=plot.style_linebr)
+
+var label yVWAPLabel = na
+if yvw
+    yVWAPLabel := label.new(bar_index, yvw, text = "                      Y-VWAP", color=show_YVWAPs_color, textcolor=show_YVWAPs_color, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(yVWAPLabel[1])    
+
+var label yVWAPPLabel = na
+if yvw and showVPrice
+    yVWAPPLabel := label.new(bar_index, yvw, text = "                                                        "+tostring(yvw), color=show_YVWAPs_color, textcolor=show_YVWAPs_color, style=label.style_none, size=size.normal,  xloc=xloc.bar_index, textalign=text.align_right)
+    label.delete(yVWAPPLabel[1])    
+
+
+
